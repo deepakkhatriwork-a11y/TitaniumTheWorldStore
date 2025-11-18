@@ -1,0 +1,197 @@
+import React, { useContext, useEffect, useCallback, useRef } from 'react'
+import { useNavigate } from 'react-router-dom';
+import myContext from '../../context/data/myContext'
+import Layout from '../../components/layout/Layout'
+import { useAuth } from '../../hooks/useAuth';
+
+function Order() {
+  const context = useContext(myContext)
+  const { mode, order, getUserOrders } = context
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const hasFetchedOrders = useRef(false);
+
+  const fetchUserOrders = useCallback(async () => {
+    if (isAuthenticated && user && user.id) {
+      console.log('Fetching orders for user:', user.id);
+      await getUserOrders(user.id);
+    } else {
+      console.log('Cannot fetch orders - missing user data:', { isAuthenticated, user });
+    }
+  }, [isAuthenticated, user, getUserOrders]);
+
+  useEffect(() => {
+    // Check if user is authenticated
+    console.log('Order page - auth state:', { isAuthenticated, user });
+    if (!isAuthenticated || !user) {
+      navigate('/login');
+      return;
+    }
+    
+    // Prevent multiple fetches
+    if (!hasFetchedOrders.current) {
+      hasFetchedOrders.current = true;
+      fetchUserOrders();
+    }
+  }, [isAuthenticated, user, navigate, fetchUserOrders]);
+
+  // Function to format date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  // Function to format currency
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
+
+  if (!isAuthenticated || !user) {
+    return (
+      <Layout>
+        <div className="container mx-auto py-8 text-center">
+          <h1 className="text-2xl font-bold mb-6" style={{ color: mode === 'dark' ? 'white' : '' }}>
+            Your Orders
+          </h1>
+          <p className="text-gray-500 mb-4">Please log in to view your orders.</p>
+          <button 
+            onClick={() => navigate('/login')}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Go to Login
+          </button>
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <div className="container mx-auto py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold" style={{ color: mode === 'dark' ? 'white' : '' }}>
+            Your Orders
+          </h1>
+          <button 
+            onClick={() => {
+              console.log('Refresh button clicked');
+              hasFetchedOrders.current = false; // Reset the flag to allow refetching
+              fetchUserOrders();
+            }}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+          >
+            Refresh Orders
+          </button>
+        </div>
+        
+        {order.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center" style={{ backgroundColor: mode === 'dark' ? 'rgb(46 49 55)' : '', color: mode === 'dark' ? 'white' : '' }}>
+            <div className="mx-auto w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: mode === 'dark' ? 'rgb(55 65 81)' : '' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium mb-2" style={{ color: mode === 'dark' ? 'white' : '' }}>No orders yet</h3>
+            <p className="text-gray-500 mb-4" style={{ color: mode === 'dark' ? 'rgb(156 163 175)' : '' }}>
+              You haven't placed any orders yet.
+            </p>
+            <button 
+              onClick={() => navigate('/products')}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Start Shopping
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {order.map((orderItem, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden" style={{ backgroundColor: mode === 'dark' ? 'rgb(46 49 55)' : '', color: mode === 'dark' ? 'white' : '' }}>
+                <div className="p-6">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900" style={{ color: mode === 'dark' ? 'white' : '' }}>
+                        Order #{orderItem.paymentId?.substring(0, 8) || orderItem.id?.substring(0, 8) || 'N/A'}
+                      </h2>
+                      <p className="text-sm text-gray-500" style={{ color: mode === 'dark' ? 'gray' : '' }}>
+                        {formatDate(orderItem.date)}
+                      </p>
+                    </div>
+                    <div className="mt-2 md:mt-0 flex items-center space-x-3">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                        orderItem.status === 'Delivered' ? 'bg-green-100 text-green-800' :
+                        orderItem.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
+                        orderItem.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`} style={{ backgroundColor: mode === 'dark' ? 'rgb(56 65 89)' : '', color: mode === 'dark' ? 'white' : '' }}>
+                        {orderItem.status || 'Processing'}
+                      </span>
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800" style={{ backgroundColor: mode === 'dark' ? 'rgb(56 65 89)' : '', color: mode === 'dark' ? 'white' : '' }}>
+                        {orderItem.paymentMethod || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t border-gray-200 pt-4" style={{ borderColor: mode === 'dark' ? 'rgb(75 85 99)' : '' }}>
+                    <h3 className="text-md font-medium text-gray-900 mb-2" style={{ color: mode === 'dark' ? 'white' : '' }}>Items</h3>
+                    <div className="space-y-3">
+                      {orderItem.cartItems?.map((item, itemIndex) => (
+                        <div key={itemIndex} className="flex items-center">
+                          <img 
+                            src={item.imageUrl || item.image} 
+                            alt={item.title} 
+                            className="h-16 w-16 object-cover rounded-md"
+                            onError={(e) => {
+                              e.target.src = 'https://placehold.co/100x100?text=No+Image';
+                            }}
+                          />
+                          <div className="ml-4 flex-1">
+                            <h4 className="text-sm font-medium text-gray-900" style={{ color: mode === 'dark' ? 'white' : '' }}>{item.title}</h4>
+                            <p className="text-sm text-gray-500" style={{ color: mode === 'dark' ? 'gray' : '' }}>Quantity: {item.quantity || 1}</p>
+                          </div>
+                          <p className="text-sm font-medium text-gray-900" style={{ color: mode === 'dark' ? 'white' : '' }}>{formatCurrency(item.price)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="border-t border-gray-200 pt-4 mt-4" style={{ borderColor: mode === 'dark' ? 'rgb(75 85 99)' : '' }}>
+                    <div className="flex justify-between">
+                      <p className="text-gray-600" style={{ color: mode === 'dark' ? 'gray' : '' }}>Total</p>
+                      <p className="text-lg font-semibold text-gray-900" style={{ color: mode === 'dark' ? 'white' : '' }}>{formatCurrency(orderItem.totalAmount || orderItem.total || 0)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t border-gray-200 pt-4 mt-4" style={{ borderColor: mode === 'dark' ? 'rgb(75 85 99)' : '' }}>
+                    <h3 className="text-md font-medium text-gray-900 mb-2" style={{ color: mode === 'dark' ? 'white' : '' }}>Shipping Information</h3>
+                    <div className="text-sm text-gray-600" style={{ color: mode === 'dark' ? 'gray' : '' }}>
+                      <p>{orderItem.userName || orderItem.addressInfo?.name || 'N/A'}</p>
+                      <p>{orderItem.addressInfo?.address || 'N/A'}</p>
+                      <p>Pincode: {orderItem.addressInfo?.pincode || orderItem.userPincode || 'N/A'}</p>
+                      <p>Phone: {orderItem.addressInfo?.phoneNumber || orderItem.userPhone || 'N/A'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t border-gray-200 pt-4 mt-4" style={{ borderColor: mode === 'dark' ? 'rgb(75 85 99)' : '' }}>
+                    <h3 className="text-md font-medium text-gray-900 mb-2" style={{ color: mode === 'dark' ? 'white' : '' }}>Order Details</h3>
+                    <div className="text-sm text-gray-600" style={{ color: mode === 'dark' ? 'gray' : '' }}>
+                      <p>Order ID: {orderItem.id || 'N/A'}</p>
+                      <p>Payment ID: {orderItem.paymentId || 'N/A'}</p>
+                      <p>Order Date: {formatDate(orderItem.date)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Layout>
+  )
+}
+
+export default Order
