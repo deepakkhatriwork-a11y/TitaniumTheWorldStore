@@ -52,7 +52,6 @@ service cloud.firestore {
       padding: '20px', 
       backgroundColor: '#f8f9fa', 
       borderRadius: '8px', 
-      margin: '20px',
       maxWidth: '800px',
       margin: '20px auto'
     }}>
