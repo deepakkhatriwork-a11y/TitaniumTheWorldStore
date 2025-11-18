@@ -26,7 +26,7 @@ function HeroSection() {
           <div className="md:w-1/2 flex justify-center">
             <div className="relative w-full max-w-md">
               <img 
-                src="https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?auto=format&fit=crop&w=800&q=80" 
+                src="https://images.unsplash.com/photo-1605236453806-6ff36851218e?auto=format&fit=crop&w=800&q=80" 
                 alt="Latest Smartphone"
                 className="rounded-2xl w-full object-cover"
               />

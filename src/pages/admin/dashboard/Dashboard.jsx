@@ -7,6 +7,7 @@ import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore'
 import { db } from '../../../firebase/firebaseConfig'
 import { formatCurrency, formatDate, calculateTotalRevenue, normalizeOrderData } from '../../../utils/firebaseUtils'
 import DeployRulesInstructions from '../../../components/DeployRulesInstructions'
+import { FiEye } from 'react-icons/fi'
 
 // Sample data for when Firebase is not accessible
 const sampleStats = [
@@ -201,68 +202,24 @@ function Dashboard() {
                   >
                     Retry Connection
                   </button>
-                  {!user && (
-                    <p className="text-yellow-600 text-sm mt-2">
-                      You are not logged in. <Link to="/login" className="underline">Login as admin</Link> to see real data.
-                    </p>
-                  )}
-                </div>
-              )}
-              {showSampleData && (
-                <div className="mt-2">
-                  <p className="text-yellow-600 text-sm">
-                    Currently showing sample data. 
-                  </p>
-                  <button 
-                    onClick={handleShowRealData}
-                    className="mt-1 text-sm text-blue-600 hover:text-blue-800 underline"
-                  >
-                    Try to Load Real Data
-                  </button>
-                  <Link to="/dashboard-test" className="mt-1 text-sm text-blue-600 hover:text-blue-800 underline block">
-                    Run Dashboard Diagnostics
-                  </Link>
-                  <Link to="/firebase-test" className="mt-1 text-sm text-blue-600 hover:text-blue-800 underline block">
-                    Run Firebase Connection Test
-                  </Link>
                 </div>
               )}
             </div>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              to="/add-product"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-2 text-sm font-medium text-white hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 transition-all"
-            >
-              Add Product
-            </Link>
-            <Link
-              to="/add-one-rupee-item"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-green-600 to-teal-600 px-6 py-2 text-sm font-medium text-white hover:from-green-700 hover:to-teal-700 shadow-lg shadow-green-500/30 transition-all"
-            >
-              Add ₹1 Item for India
-            </Link>
-            <Link
-              to="/add-one-rupee-items"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-600 to-orange-600 px-6 py-2 text-sm font-medium text-white hover:from-amber-700 hover:to-orange-700 shadow-lg shadow-amber-500/30 transition-all"
-            >
-              Add 10 ₹1 Items
-            </Link>
-            <Link
-              to="/add-sample-products"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-2 text-sm font-medium text-white hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/30 transition-all"
-            >
-              Add Sample Products
-            </Link>
-            <Link
-              to="/products"
-              className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors"
-            >
-              Manage Products
-            </Link>
-            <button className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors">
-              Download Report
-            </button>
-          </div>
+            <div className="flex flex-wrap gap-4 mb-8">
+              <Link
+                to="/add-product"
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-2 text-sm font-medium text-white hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 transition-all"
+              >
+                Add Product
+              </Link>
+              <Link
+                to="/products"
+                className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors"
+              >
+                <FiEye className="h-4 w-4" />
+                View Products
+              </Link>
+            </div>
           </div>
 
           {/* Deploy Rules Instructions - Only show when there's a Firebase error */}
@@ -296,12 +253,6 @@ function Dashboard() {
                   <p className="text-sm text-gray-600">Latest transactions in your store</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Link to="/login" className="text-sm font-medium text-blue-600 hover:text-blue-700">
-                    Login
-                  </Link>
-                  <Link to="/register" className="text-sm font-medium text-blue-600 hover:text-blue-700">
-                    Sign Up
-                  </Link>
                 </div>
               </div>
               <div className="divide-y divide-blue-50">
