@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { FiHome, FiGrid, FiShoppingCart, FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiYoutube, FiGithub } from 'react-icons/fi'
 // Added imports for Firebase and visitor tracking
-import { getVisitorCount } from '../../utils/visitorTracker'
+import { getActiveVisitors } from '../../utils/visitorTracker'
 
 function Footer() {
   const location = useLocation();
   const [visitorCount, setVisitorCount] = useState(0);
   const [mumbaiTime, setMumbaiTime] = useState('');
 
-  // Real-time visitor count from Firebase
+  // Real-time active visitor count from Firebase (within last 5 minutes)
   useEffect(() => {
-    const unsubscribe = getVisitorCount((count) => {
+    const unsubscribe = getActiveVisitors((count) => {
       setVisitorCount(count);
     });
 
