@@ -263,7 +263,17 @@ function AdminDashboardTab() {
                 {/* Orders Tab */}
                 <TabPanel>
                     <div className="relative overflow-x-auto mb-16">
-                        <h1 className="text-center mb-5 text-3xl font-semibold underline" style={{ color: mode === 'dark' ? 'white' : '' }}>Order Details</h1>
+                        <div className="flex justify-between items-center mb-6">
+                            <h1 className="text-center mb-5 text-3xl font-semibold underline" style={{ color: mode === 'dark' ? 'white' : '' }}>Order Details</h1>
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={getOrderData}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                                >
+                                    Refresh Orders
+                                </button>
+                            </div>
+                        </div>
                         {order.length === 0 ? (
                             <div className="text-center py-8">
                                 <p className="text-gray-500">No orders found</p>
