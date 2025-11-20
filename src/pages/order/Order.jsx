@@ -315,10 +315,10 @@ function Order() {
                   <div className="border-t border-gray-200 pt-4 mt-4 flex flex-col md:flex-row md:items-center md:justify-between" style={{ borderColor: mode === 'dark' ? 'rgb(75 85 99)' : '' }}>
                     <div>
                       <p className="text-gray-600" style={{ color: mode === 'dark' ? 'gray' : '' }}>
-                        Shipping to: {orderItem.address?.name || 'N/A'}
+                        Shipping to: {orderItem.addressInfo?.name || orderItem.address?.name || 'N/A'}
                       </p>
                       <p className="text-sm text-gray-500" style={{ color: mode === 'dark' ? 'gray' : '' }}>
-                        {orderItem.address?.address || ''}, {orderItem.address?.city || ''}, {orderItem.address?.state || ''} {orderItem.address?.pincode || ''}
+                        {orderItem.addressInfo?.address || orderItem.address?.address || ''}, {orderItem.addressInfo?.city || orderItem.address?.city || ''}, {orderItem.addressInfo?.state || orderItem.address?.state || ''} {orderItem.addressInfo?.pincode || orderItem.address?.pincode || ''}
                       </p>
                     </div>
                     <div className="mt-4 md:mt-0 text-right">
