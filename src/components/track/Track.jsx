@@ -150,7 +150,7 @@ const Track = () => {
               <div className="p-6 border-b border-gray-200">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900">Order #{orderStatus.id}</h3>
+                    <h3 className="text-lg font-medium text-gray-900">Order #{orderStatus.orderId || orderStatus.id}</h3>
                     <p className="text-sm text-gray-500">Placed on {new Date(orderStatus.tracking[0].date).toLocaleDateString()}</p>
                   </div>
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mt-2 sm:mt-0 ${getStatusColor(orderStatus.status)}`}>

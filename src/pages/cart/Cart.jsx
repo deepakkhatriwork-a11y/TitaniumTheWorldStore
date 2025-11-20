@@ -87,6 +87,14 @@ function Cart() {
       })
     };
 
+    // Generate a numeric order ID
+    const generateOrderId = () => {
+      // Get current timestamp and extract last 8 digits
+      const timestamp = Date.now().toString();
+      const last8Digits = timestamp.substring(timestamp.length - 8);
+      return last8Digits;
+    };
+
     // Handle Cash on Delivery
     if (paymentMethod === "cod") {
       // Validate COD eligibility
@@ -95,8 +103,12 @@ function Cart() {
         return toast.error(codValidation.reason || 'COD is not available for this order');
       }
       
+      // Generate numeric order ID
+      const orderId = generateOrderId();
+      
       // Store order in Firebase for COD
       const orderInfo = {
+        orderId,
         cartItems: items,
         addressInfo,
         date: new Date().toLocaleString("en-US", {
@@ -158,8 +170,12 @@ function Cart() {
         toast.success('Payment Successful');
         const paymentId = response.razorpay_payment_id;
         
+        // Generate numeric order ID
+        const orderId = generateOrderId();
+        
         // Store order in Firebase
         const orderInfo = {
+          orderId,
           cartItems: items,
           addressInfo,
           date: new Date().toLocaleString("en-US", {

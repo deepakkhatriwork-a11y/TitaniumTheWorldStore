@@ -203,7 +203,7 @@ function AdminDashboardTab() {
                                             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                                                 <div>
                                                     <h2 className="text-lg font-semibold text-gray-900" style={{ color: mode === 'dark' ? 'white' : '' }}>
-                                                        Order #{orderItem.id?.substring(0, 8) || orderItem.paymentId?.substring(0, 8) || 'N/A'}
+                                                        Order #{orderItem.orderId || orderItem.id?.substring(0, 8) || orderItem.paymentId?.substring(0, 8) || 'N/A'}
                                                     </h2>
                                                     <p className="text-sm text-gray-500" style={{ color: mode === 'dark' ? 'gray' : '' }}>
                                                         {orderItem.date || 'N/A'}
