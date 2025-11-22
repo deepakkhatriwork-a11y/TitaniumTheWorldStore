@@ -1,3 +1,70 @@
+# AWS Polly Text-to-Speech Application
+
+This is a React application that uses AWS Polly service to convert text to speech.
+
+## Features
+
+- Convert text to speech using AWS Polly
+- Multiple voice options
+- Responsive design
+- Easy to use interface
+
+## Prerequisites
+
+1. AWS Account with Polly service enabled
+2. AWS Access Key ID and Secret Access Key
+3. Node.js and npm installed
+
+## Setup Instructions
+
+1. Clone the repository
+2. Install dependencies:
+   ```
+   npm install
+   ```
+
+3. Create a `.env.local` file in the root directory with your AWS credentials:
+   ```
+   REACT_APP_AWS_ACCESS_KEY_ID=your_access_key_id
+   REACT_APP_AWS_SECRET_ACCESS_KEY=your_secret_access_key
+   REACT_APP_AWS_REGION=us-east-1
+   ```
+
+4. Start the development server:
+   ```
+   npm start
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) to view the application.
+
+## Available Voices
+
+- Joanna (Female)
+- Matthew (Male)
+- Amy (Female, British)
+- Brian (Male, British)
+- Emma (Female, British)
+- Aditi (Female, Indian)
+- Raveena (Female, Indian)
+- Hans (Male, Chinese)
+- Mizuki (Female, Japanese)
+- Seoyeon (Female, Korean)
+
+## Usage
+
+1. Enter the text you want to convert to speech in the text area
+2. Select a voice from the dropdown
+3. Click "Convert to Speech" button
+4. Listen to the generated audio
+
+## Troubleshooting
+
+- If you get authentication errors, check your AWS credentials in the `.env.local` file
+- Ensure your AWS account has permissions to use Polly service
+- Check browser console for any JavaScript errors
+
+---
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

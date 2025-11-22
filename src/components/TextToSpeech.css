@@ -1,0 +1,136 @@
+.text-to-speech-container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background-color: #f9f9f9;
+}
+
+.text-to-speech-container h2 {
+  color: #333;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.text-to-speech-container p {
+  text-align: center;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.input-section {
+  margin-bottom: 20px;
+}
+
+.input-section textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.language-selector,
+.voice-selector {
+  flex: 1;
+  min-width: 200px;
+}
+
+.language-selector label,
+.voice-selector label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+.language-selector select,
+.voice-selector select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  background-color: white;
+}
+
+.speak-button {
+  padding: 12px 24px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  min-width: 200px;
+}
+
+.speak-button:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+.speak-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #d32f2f;
+  background-color: #ffebee;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border-left: 4px solid #d32f2f;
+}
+
+.instructions {
+  background-color: #e3f2fd;
+  padding: 15px;
+  border-radius: 4px;
+  border-left: 4px solid #2196f3;
+}
+
+.instructions h3 {
+  margin-top: 0;
+  color: #0d47a1;
+}
+
+.instructions ul {
+  padding-left: 20px;
+  margin-bottom: 0;
+}
+
+.instructions li {
+  margin-bottom: 8px;
+  color: #333;
+}
+
+@media (max-width: 600px) {
+  .controls {
+    flex-direction: column;
+  }
+  
+  .language-selector,
+  .voice-selector {
+    width: 100%;
+  }
+  
+  .speak-button {
+    width: 100%;
+  }
+}
