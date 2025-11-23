@@ -6,6 +6,7 @@ const TextToSpeech = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [speechRate, setSpeechRate] = useState(1); // New state for speech rate control
+  const [audioBlob, setAudioBlob] = useState(null); // New state to store audio blob for download
 
   // Available voices for AWS Polly with language support
   const voices = [
@@ -99,6 +100,7 @@ const TextToSpeech = () => {
       if (data.AudioStream) {
         // Create a Blob from the audio stream
         const blob = new Blob([data.AudioStream], { type: 'audio/mp3' });
+        setAudioBlob(blob); // Store blob for download
         const url = URL.createObjectURL(blob);
         
         // Create and play audio
@@ -119,6 +121,28 @@ const TextToSpeech = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Function to download the MP3 file
+  const handleDownload = () => {
+    if (!audioBlob) {
+      setError('No audio available for download. Please convert text to speech first.');
+      return;
+    }
+
+    // Create download link
+    const url = URL.createObjectURL(audioBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'titanium-translator-audio.mp3'; // Default filename
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
   };
 
   return (
@@ -175,13 +199,23 @@ const TextToSpeech = () => {
           <span className="rate-value">{speechRate}x</span>
         </div>
         
-        <button 
-          onClick={handleSpeak} 
-          disabled={isLoading}
-          className="speak-button"
-        >
-          {isLoading ? 'Converting...' : 'Convert to Speech'}
-        </button>
+        <div className="button-group">
+          <button 
+            onClick={handleSpeak} 
+            disabled={isLoading}
+            className="speak-button"
+          >
+            {isLoading ? 'Converting...' : 'Convert to Speech'}
+          </button>
+          
+          <button 
+            onClick={handleDownload} 
+            disabled={!audioBlob}
+            className="download-button"
+          >
+            Download MP3
+          </button>
+        </div>
       </div>
       
       {error && <div className="error-message">{error}</div>}
@@ -193,6 +227,7 @@ const TextToSpeech = () => {
           <li>Select a voice from the dropdown</li>
           <li>Adjust speech rate using the slider (0.5x = slower, 1x = normal, 1.5x = faster)</li>
           <li>Click "Convert to Speech" to hear the audio</li>
+          <li>Click "Download MP3" to save the audio file</li>
           <li>Note: AWS credentials must be configured for this to work</li>
         </ul>
       </div>
