@@ -6,7 +6,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>AWS Polly Text-to-Speech</h1>
+        <h1>Titanium Translator</h1>
         <TextToSpeech />
       </header>
     </div>

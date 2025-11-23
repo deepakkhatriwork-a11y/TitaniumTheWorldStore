@@ -2,36 +2,46 @@ import React, { useState } from 'react';
 
 const TextToSpeech = () => {
   const [text, setText] = useState('');
-  const [voice, setVoice] = useState('Aditi');
-  const [language, setLanguage] = useState('hi-IN');
+  const [voice, setVoice] = useState('Aditi'); // Changed default from 'Arjun' to 'Aditi' since Arjun is not a valid voice
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [speechRate, setSpeechRate] = useState(1); // New state for speech rate control
 
   // Available voices for AWS Polly with language support
   const voices = [
     // English Voices
-    { id: 'Joanna', name: 'Joanna (Female, US English)', language: 'en-US' },
-    { id: 'Matthew', name: 'Matthew (Male, US English)', language: 'en-US' },
-    { id: 'Amy', name: 'Amy (Female, British English)', language: 'en-GB' },
-    { id: 'Brian', name: 'Brian (Male, British English)', language: 'en-GB' },
-    { id: 'Emma', name: 'Emma (Female, British English)', language: 'en-GB' },
+    { id: 'Joanna', name: 'Joanna (Female, US English)', language: 'en-US', engine: 'standard' },
+    { id: 'Matthew', name: 'Matthew (Male, US English)', language: 'en-US', engine: 'standard' },
+    { id: 'Amy', name: 'Amy (Female, British English)', language: 'en-GB', engine: 'standard' },
+    { id: 'Brian', name: 'Brian (Male, British English)', language: 'en-GB', engine: 'standard' },
+    { id: 'Emma', name: 'Emma (Female, British English)', language: 'en-GB', engine: 'standard' },
     
     // Indian Language Voices
-    { id: 'Aditi', name: 'Aditi (Female, Hindi)', language: 'hi-IN' },
-    { id: 'Raveena', name: 'Raveena (Female, Hindi)', language: 'hi-IN' },
-    { id: 'Kajal', name: 'Kajal (Female, Hindi)', language: 'hi-IN' },
-    { id: 'Aparna', name: 'Aparna (Female, Hindi)', language: 'hi-IN' },
-    { id: 'Arjun', name: 'Arjun (Male, Hindi)', language: 'hi-IN' },
+    { id: 'Aditi', name: 'Aditi (Female, Hindi)', language: 'hi-IN', engine: 'standard' },
+    { id: 'Raveena', name: 'Raveena (Female, Hindi)', language: 'hi-IN', engine: 'standard' },
+    { id: 'Kajal', name: 'Kajal (Female, Hindi)', language: 'hi-IN', engine: 'neural' },
     
     // Other International Voices
-    { id: 'Hans', name: 'Hans (Male, Mandarin Chinese)', language: 'cmn-CN' },
-    { id: 'Mizuki', name: 'Mizuki (Female, Japanese)', language: 'ja-JP' },
-    { id: 'Seoyeon', name: 'Seoyeon (Female, Korean)', language: 'ko-KR' }
+    { id: 'Hans', name: 'Hans (Male, Mandarin Chinese)', language: 'cmn-CN', engine: 'standard' },
+    { id: 'Mizuki', name: 'Mizuki (Female, Japanese)', language: 'ja-JP', engine: 'standard' },
+    { id: 'Seoyeon', name: 'Seoyeon (Female, Korean)', language: 'ko-KR', engine: 'standard' }
   ];
 
   const handleSpeak = async () => {
     if (!text.trim()) {
       setError('Please enter some text to convert to speech');
+      return;
+    }
+
+    // Check text length limits based on engine
+    const selectedVoice = voices.find(v => v.id === voice);
+    const engine = selectedVoice?.engine || 'standard';
+    const maxLength = engine === 'neural' ? 1500 : 3000;
+    
+    // When using SSML, we need to account for the wrapper tags
+    const ssmlWrapperLength = 60; // Approximate length of SSML tags
+    if (text.length > (maxLength - ssmlWrapperLength)) {
+      setError(`Text exceeds maximum length of ${maxLength} characters for ${engine} engine. Current length: ${text.length} characters. Please reduce the text length.`);
       return;
     }
 
@@ -43,6 +53,13 @@ const TextToSpeech = () => {
       if (!process.env.REACT_APP_AWS_ACCESS_KEY_ID || !process.env.REACT_APP_AWS_SECRET_ACCESS_KEY) {
         throw new Error('AWS credentials not found. Please configure your environment variables.');
       }
+
+      // Log credentials availability for debugging (without exposing actual values)
+      console.log('AWS Credentials Status:', {
+        hasAccessKeyId: !!process.env.REACT_APP_AWS_ACCESS_KEY_ID,
+        hasSecretAccessKey: !!process.env.REACT_APP_AWS_SECRET_ACCESS_KEY,
+        region: process.env.REACT_APP_AWS_REGION || 'us-east-1'
+      });
 
       // Dynamically import AWS SDK to avoid issues with server-side rendering
       const AWS = (await import('aws-sdk')).default;
@@ -56,19 +73,27 @@ const TextToSpeech = () => {
 
       const polly = new AWS.Polly({ apiVersion: '2016-06-10' });
 
-      // Determine language from selected voice
-      const selectedVoice = voices.find(v => v.id === voice);
-      const textLanguage = selectedVoice ? selectedVoice.language : 'hi-IN';
+      // Validate that the selected voice exists
+      if (!selectedVoice) {
+        throw new Error(`Selected voice "${voice}" is not available. Please select a different voice.`);
+      }
+
+      // Create SSML with speech rate control
+      const ssmlText = `<speak><prosody rate="${speechRate}">${text}</prosody></speak>`;
 
       const params = {
         OutputFormat: 'mp3',
-        Text: text,
+        Text: ssmlText,
+        TextType: 'ssml',
         VoiceId: voice,
-        Engine: 'standard',
-        LanguageCode: textLanguage
+        Engine: selectedVoice.engine || 'standard'
       };
 
+      console.log('Polly Synthesize Request:', params);
+
       const data = await polly.synthesizeSpeech(params).promise();
+      
+      console.log('Polly Response:', !!data, data ? Object.keys(data) : 'No data');
       
       // Handle the audio stream correctly for browser environment
       if (data.AudioStream) {
@@ -84,6 +109,9 @@ const TextToSpeech = () => {
           console.error('Error playing audio:', e);
           setError('Failed to play audio. Please check browser permissions.');
         });
+      } else {
+        setError('No audio stream received from AWS Polly. Please check your configuration.');
+        console.error('No AudioStream in response:', data);
       }
     } catch (err) {
       console.error('Error synthesizing speech:', err);
@@ -93,13 +121,10 @@ const TextToSpeech = () => {
     }
   };
 
-  // Filter voices by selected language
-  const filteredVoices = voices.filter(v => v.language.startsWith(language.split('-')[0]));
-
   return (
     <div className="text-to-speech-container">
-      <h2>Text to Speech Converter</h2>
-      <p>Convert your text to speech using AWS Polly</p>
+      <h2>Titanium Translator</h2>
+      <p className="note">Note: This tool converts text to speech. Select a voice from the dropdown.</p>
       
       <div className="input-section">
         <textarea
@@ -109,32 +134,18 @@ const TextToSpeech = () => {
           rows={6}
           cols={50}
         />
+        <div className="character-count">
+          Characters: {text.length} / {
+            (() => {
+              const selectedVoice = voices.find(v => v.id === voice);
+              const engine = selectedVoice?.engine || 'standard';
+              return engine === 'neural' ? '1500' : '3000';
+            })()
+          }
+        </div>
       </div>
       
       <div className="controls">
-        <div className="language-selector">
-          <label htmlFor="language-select">Select Language:</label>
-          <select 
-            id="language-select"
-            value={language} 
-            onChange={(e) => {
-              setLanguage(e.target.value);
-              // Set default voice for selected language
-              const defaultVoice = voices.find(v => v.language === e.target.value);
-              if (defaultVoice) {
-                setVoice(defaultVoice.id);
-              }
-            }}
-          >
-            <option value="en-US">English (US)</option>
-            <option value="en-GB">English (UK)</option>
-            <option value="hi-IN">Hindi (India)</option>
-            <option value="ja-JP">Japanese</option>
-            <option value="ko-KR">Korean</option>
-            <option value="cmn-CN">Chinese (Mandarin)</option>
-          </select>
-        </div>
-        
         <div className="voice-selector">
           <label htmlFor="voice-select">Select Voice:</label>
           <select 
@@ -142,12 +153,26 @@ const TextToSpeech = () => {
             value={voice} 
             onChange={(e) => setVoice(e.target.value)}
           >
-            {filteredVoices.map((v) => (
+            {voices.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.name}
               </option>
             ))}
           </select>
+        </div>
+        
+        <div className="rate-control">
+          <label htmlFor="rate-control">Speech Rate:</label>
+          <input
+            id="rate-control"
+            type="range"
+            min="0.5"
+            max="1.5"
+            step="0.1"
+            value={speechRate}
+            onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
+          />
+          <span className="rate-value">{speechRate}x</span>
         </div>
         
         <button 
@@ -165,7 +190,8 @@ const TextToSpeech = () => {
         <h3>Instructions:</h3>
         <ul>
           <li>Enter your text in the text area above</li>
-          <li>Select a language and voice from the dropdowns</li>
+          <li>Select a voice from the dropdown</li>
+          <li>Adjust speech rate using the slider (0.5x = slower, 1x = normal, 1.5x = faster)</li>
           <li>Click "Convert to Speech" to hear the audio</li>
           <li>Note: AWS credentials must be configured for this to work</li>
         </ul>
