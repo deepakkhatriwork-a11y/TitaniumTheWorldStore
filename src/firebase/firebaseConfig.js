@@ -1,12 +1,10 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getDatabase } from "firebase/database";
 
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDyNwgQ730H3AzsKy-cfwfK4d0J1iyAtEw",
   authDomain: "titaniumtheworldstore-58259.firebaseapp.com",
@@ -18,13 +16,18 @@ const firebaseConfig = {
   measurementId: "G-LWZ1L35124"
 };
 
-// Initialize Firebase
+// Initialize Firebase with performance optimizations
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+// Initialize services immediately since lazy loading is causing issues
 const auth = getAuth(app);
 const database = getDatabase(app);
 const fireDB = getFirestore(app);
-const db = fireDB; // Alias for compatibility
 
-export { app, analytics, auth, database, fireDB, db };
-
+// Export instances
+export { 
+  app, 
+  auth, 
+  database, 
+  fireDB
+};

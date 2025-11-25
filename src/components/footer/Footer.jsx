@@ -164,6 +164,36 @@ function Footer() {
           </div>
         </div>
 
+        {/* Payment Methods */}
+        <div className="border-t border-gray-800 dark:border-gray-700">
+          <div className="max-w-7xl mx-auto px-6 py-6">
+            <h4 className="text-white font-semibold mb-4 text-sm">We Accept</h4>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center justify-center w-16 h-10 bg-white rounded-md shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
+                <span className="font-bold text-gray-800 text-xs tracking-wider">VISA</span>
+              </div>
+              <div className="flex items-center justify-center w-16 h-10 bg-white rounded-md shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
+                <span className="font-bold text-gray-800 text-xs tracking-wider">MC</span>
+              </div>
+              <div className="flex items-center justify-center w-16 h-10 bg-white rounded-md shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
+                <span className="font-bold text-gray-800 text-xs tracking-wider">UPI</span>
+              </div>
+              <div className="flex items-center justify-center w-16 h-10 bg-white rounded-md shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
+                <span className="font-bold text-gray-800 text-xs tracking-wider">PAYTM</span>
+              </div>
+              <div className="flex items-center justify-center w-16 h-10 bg-white rounded-md shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
+                <span className="font-bold text-gray-800 text-xs tracking-wider">GPAY</span>
+              </div>
+              <div className="flex items-center justify-center w-16 h-10 bg-white rounded-md shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
+                <span className="font-bold text-gray-800 text-xs tracking-wider">PHONEPE</span>
+              </div>
+              <div className="flex items-center justify-center w-16 h-10 bg-white rounded-md shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
+                <span className="font-bold text-gray-800 text-xs tracking-wider">COD</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="border-t border-gray-800 dark:border-gray-700">
           <div className="max-w-7xl mx-auto px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-600">
             © {new Date().getFullYear()} Titanium Store. All rights reserved.
@@ -262,7 +292,35 @@ function Footer() {
             </div>
           </div>
 
-          <div className="border-t border-gray-800 dark:border-gray-700 mt-8 pt-4">
+          {/* Payment Methods - Mobile */}
+          <div className="border-t border-gray-800 dark:border-gray-700 mt-8 pt-6">
+            <h4 className="text-white font-semibold mb-4 text-sm">We Accept</h4>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center justify-center w-14 h-8 bg-white rounded shadow-sm hover:shadow transition-all duration-300 transform hover:-translate-y-0.5">
+                <span className="font-bold text-gray-800 text-[10px] tracking-wide">VISA</span>
+              </div>
+              <div className="flex items-center justify-center w-14 h-8 bg-white rounded shadow-sm hover:shadow transition-all duration-300 transform hover:-translate-y-0.5">
+                <span className="font-bold text-gray-800 text-[10px] tracking-wide">MC</span>
+              </div>
+              <div className="flex items-center justify-center w-14 h-8 bg-white rounded shadow-sm hover:shadow transition-all duration-300 transform hover:-translate-y-0.5">
+                <span className="font-bold text-gray-800 text-[10px] tracking-wide">UPI</span>
+              </div>
+              <div className="flex items-center justify-center w-14 h-8 bg-white rounded shadow-sm hover:shadow transition-all duration-300 transform hover:-translate-y-0.5">
+                <span className="font-bold text-gray-800 text-[10px] tracking-wide">PAYTM</span>
+              </div>
+              <div className="flex items-center justify-center w-14 h-8 bg-white rounded shadow-sm hover:shadow transition-all duration-300 transform hover:-translate-y-0.5">
+                <span className="font-bold text-gray-800 text-[10px] tracking-wide">GPAY</span>
+              </div>
+              <div className="flex items-center justify-center w-14 h-8 bg-white rounded shadow-sm hover:shadow transition-all duration-300 transform hover:-translate-y-0.5">
+                <span className="font-bold text-gray-800 text-[10px] tracking-wide">PHONEPE</span>
+              </div>
+              <div className="flex items-center justify-center w-14 h-8 bg-white rounded shadow-sm hover:shadow transition-all duration-300 transform hover:-translate-y-0.5">
+                <span className="font-bold text-gray-800 text-[10px] tracking-wide">COD</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-800 dark:border-gray-700 mt-6 pt-4">
             <div className="text-center text-sm text-gray-500 dark:text-gray-600">
               © {new Date().getFullYear()} Titanium Store. All rights reserved.
             </div>

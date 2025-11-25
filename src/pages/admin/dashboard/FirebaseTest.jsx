@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../../../firebase/firebaseConfig';
+import { fireDB } from '../../../firebase/firebaseConfig';
 import Layout from '../../../components/layout/Layout';
 
 function FirebaseTest() {
@@ -14,7 +14,7 @@ function FirebaseTest() {
       // Test products collection (should always work - public read)
       try {
         console.log('Testing products collection...');
-        const productsSnapshot = await getDocs(collection(db, 'products'));
+        const productsSnapshot = await getDocs(collection(fireDB, 'products'));
         results.products = { 
           success: true, 
           count: productsSnapshot.size,
@@ -34,7 +34,7 @@ function FirebaseTest() {
       // Test orders collection (requires auth)
       try {
         console.log('Testing orders collection...');
-        const ordersSnapshot = await getDocs(collection(db, 'orders'));
+        const ordersSnapshot = await getDocs(collection(fireDB, 'orders'));
         results.orders = { 
           success: true, 
           count: ordersSnapshot.size,
@@ -54,7 +54,7 @@ function FirebaseTest() {
       // Test user collection (requires auth)
       try {
         console.log('Testing user collection...');
-        const userSnapshot = await getDocs(collection(db, 'users'));
+        const userSnapshot = await getDocs(collection(fireDB, 'users'));
         results.user = { 
           success: true, 
           count: userSnapshot.size,

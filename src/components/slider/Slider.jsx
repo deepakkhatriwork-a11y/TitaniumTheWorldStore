@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 const Slider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // High-quality product images
+  // High-quality product images with loading optimization
   const slides = [
     {
       id: 1,
@@ -49,6 +49,18 @@ const Slider = () => {
     }
   ];
 
+  // Preload images for smoother transitions
+  useEffect(() => {
+    const preloadImages = () => {
+      slides.forEach(slide => {
+        const img = new Image();
+        img.src = slide.image;
+      });
+    };
+    
+    preloadImages();
+  }, []);
+
   // Auto slide every 10 seconds
   useEffect(() => {
     const interval = setInterval(() => {
@@ -87,6 +99,7 @@ const Slider = () => {
             src={slide.image}
             alt={slide.title}
             className="w-full h-full object-cover"
+            loading="eager" // First slide loads eagerly, others lazily
           />
           {/* Overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-black/30" />

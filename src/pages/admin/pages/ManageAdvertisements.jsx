@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../../../components/layout/Layout';
 import { toast } from 'react-toastify';
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../../firebase/firebaseConfig';
+import { fireDB } from '../../../firebase/firebaseConfig';
 
 function ManageAdvertisements() {
     const navigate = useNavigate();
@@ -24,7 +24,7 @@ function ManageAdvertisements() {
     const fetchAdvertisements = async () => {
         try {
             setLoading(true);
-            const querySnapshot = await getDocs(collection(db, 'advertisements'));
+            const querySnapshot = await getDocs(collection(fireDB, 'advertisements'));
             const adsData = querySnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -61,11 +61,11 @@ function ManageAdvertisements() {
         try {
             if (editingAd) {
                 // Update existing ad
-                await updateDoc(doc(db, 'advertisements', editingAd.id), adForm);
+                await updateDoc(doc(fireDB, 'advertisements', editingAd.id), adForm);
                 toast.success('Advertisement updated successfully');
             } else {
                 // Add new ad
-                await addDoc(collection(db, 'advertisements'), {
+                await addDoc(collection(fireDB, 'advertisements'), {
                     ...adForm,
                     createdAt: new Date().toISOString()
                 });
@@ -102,7 +102,7 @@ function ManageAdvertisements() {
     const handleDelete = async (adId) => {
         if (window.confirm('Are you sure you want to delete this advertisement?')) {
             try {
-                await deleteDoc(doc(db, 'advertisements', adId));
+                await deleteDoc(doc(fireDB, 'advertisements', adId));
                 toast.success('Advertisement deleted successfully');
                 fetchAdvertisements();
                 
@@ -199,41 +199,38 @@ function ManageAdvertisements() {
                                         onChange={handleChange}
                                         className="bg-gray-50 border border-gray-300 px-4 py-3 w-full rounded-lg text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     >
-                                        <option value="hero">Hero Section</option>
+                                        <option value="hero">Hero Banner</option>
                                         <option value="sidebar">Sidebar</option>
                                         <option value="footer">Footer</option>
-                                        <option value="product-page">Product Page</option>
                                     </select>
                                 </div>
 
-                                <div className="mb-6 flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        name="isActive"
-                                        checked={adForm.isActive}
-                                        onChange={handleChange}
-                                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                    />
-                                    <label className="ml-2 block text-gray-700 text-sm">
-                                        Active Advertisement
+                                <div className="mb-6">
+                                    <label className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            name="isActive"
+                                            checked={adForm.isActive}
+                                            onChange={handleChange}
+                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span className="ml-2 text-gray-700">Active</span>
                                     </label>
                                 </div>
 
                                 <div className="flex gap-3">
                                     <button
                                         type="submit"
-                                        disabled={loading}
-                                        className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold px-4 py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/30"
                                     >
-                                        {loading ? (editingAd ? 'Updating...' : 'Adding...') : (editingAd ? 'Update Advertisement' : 'Add Advertisement')}
+                                        {editingAd ? 'Update Advertisement' : 'Add Advertisement'}
                                     </button>
                                     
                                     {editingAd && (
                                         <button
                                             type="button"
                                             onClick={handleCancelEdit}
-                                            disabled={loading}
-                                            className="flex-1 bg-gray-200 text-gray-700 font-bold px-4 py-3 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 transition-all"
                                         >
                                             Cancel
                                         </button>
@@ -244,13 +241,8 @@ function ManageAdvertisements() {
 
                         {/* Advertisements List */}
                         <div className="bg-white/80 backdrop-blur-sm border border-blue-100 rounded-2xl shadow-lg p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-semibold text-gray-900">Current Advertisements</h2>
-                                <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-                                    {ads.length} ads
-                                </span>
-                            </div>
-
+                            <h2 className="text-xl font-semibold text-gray-900 mb-6">Current Advertisements</h2>
+                            
                             {loading ? (
                                 <div className="text-center py-8">
                                     <p className="text-gray-600">Loading advertisements...</p>
@@ -258,49 +250,64 @@ function ManageAdvertisements() {
                             ) : ads.length === 0 ? (
                                 <div className="text-center py-8">
                                     <p className="text-gray-600">No advertisements found</p>
-                                    <p className="text-gray-500 text-sm mt-2">Add your first advertisement using the form</p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
                                     {ads.map((ad) => (
-                                        <div key={ad.id} className="border border-blue-100 rounded-xl p-4 hover:shadow-md transition-shadow">
-                                            <div className="flex items-start gap-4">
-                                                <img 
-                                                    src={ad.imageUrl} 
-                                                    alt={ad.title} 
-                                                    className="w-16 h-16 object-cover rounded-lg"
-                                                    onError={(e) => {
-                                                        e.target.src = 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1173&q=80';
-                                                    }}
-                                                />
+                                        <div key={ad.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                            <div className="flex justify-between items-start">
                                                 <div className="flex-1">
-                                                    <div className="flex items-start justify-between">
-                                                        <div>
-                                                            <h3 className="font-medium text-gray-900">{ad.title}</h3>
-                                                            <p className="text-sm text-gray-500 mt-1">Position: {ad.position || 'hero'}</p>
-                                                            <div className="flex items-center gap-2 mt-2">
-                                                                <span className={`text-xs px-2 py-1 rounded-full ${ad.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                                    {ad.isActive ? 'Active' : 'Inactive'}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={() => handleEdit(ad)}
-                                                                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDelete(ad.id)}
-                                                                className="text-red-600 hover:text-red-800 text-sm font-medium"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        </div>
-                                                    </div>
+                                                    <h3 className="font-medium text-gray-900">{ad.title}</h3>
+                                                    <p className="text-sm text-gray-500 mt-1">Position: {ad.position}</p>
+                                                    <p className="text-sm text-gray-500">
+                                                        Status: 
+                                                        <span className={`ml-1 ${ad.isActive ? 'text-green-600' : 'text-red-600'}`}>
+                                                            {ad.isActive ? 'Active' : 'Inactive'}
+                                                        </span>
+                                                    </p>
+                                                </div>
+                                                
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => handleEdit(ad)}
+                                                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(ad.id)}
+                                                        className="text-red-600 hover:text-red-800 text-sm font-medium"
+                                                    >
+                                                        Delete
+                                                    </button>
                                                 </div>
                                             </div>
+                                            
+                                            {ad.imageUrl && (
+                                                <div className="mt-3">
+                                                    <img 
+                                                        src={ad.imageUrl} 
+                                                        alt={ad.title} 
+                                                        className="w-full h-32 object-cover rounded-lg"
+                                                        onError={(e) => {
+                                                            e.target.src = 'https://placehold.co/400x200?text=Image+Not+Found';
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
+                                            
+                                            {ad.targetUrl && (
+                                                <div className="mt-2">
+                                                    <a 
+                                                        href={ad.targetUrl} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-600 hover:text-blue-800 text-sm underline"
+                                                    >
+                                                        View Target URL
+                                                    </a>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

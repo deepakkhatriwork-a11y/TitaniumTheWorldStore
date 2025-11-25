@@ -4,11 +4,13 @@ import Layout from '../../../components/layout/Layout'
 import myContext from '../../../context/data/myContext'
 import { useAuth } from '../../../hooks/useAuth'
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore'
-import { db } from '../../../firebase/firebaseConfig'
+import { fireDB } from '../../../firebase/firebaseConfig'
 import { formatCurrency, formatDate, calculateTotalRevenue, normalizeOrderData } from '../../../utils/firebaseUtils'
 import DeployRulesInstructions from '../../../components/DeployRulesInstructions'
 import { FiEye } from 'react-icons/fi'
 import CodOrdersSummary from './CodOrdersSummary'
+import { deployFirebaseRulesInfo } from '../../../utils/deployFirebaseRules'
+import { toast } from 'react-toastify'
 
 // Sample data for when Firebase is not accessible
 const sampleStats = [
@@ -86,7 +88,7 @@ function Dashboard() {
       }
       
       // Fetch Products
-      const productsQuery = query(collection(db, 'products'))
+      const productsQuery = query(collection(fireDB, 'products'))
       const productsSnapshot = await getDocs(productsQuery)
       const productsData = productsSnapshot.docs.map(doc => ({
         id: doc.id,
@@ -96,7 +98,7 @@ function Dashboard() {
       
       // Fetch Orders
       const ordersQuery = query(
-        collection(db, 'orders'),
+        collection(fireDB, 'orders'),
         orderBy('date', 'desc'),
         limit(10) // Increased limit to get more data for revenue calculation
       )
@@ -121,7 +123,7 @@ function Dashboard() {
       setCodOrders(codOrdersData)
       
       // Fetch Users count
-      const usersSnapshot = await getDocs(collection(db, 'users'))
+      const usersSnapshot = await getDocs(collection(fireDB, 'users'))
       const usersCount = usersSnapshot.size
       
       // Calculate inventory by category
@@ -219,6 +221,14 @@ function Dashboard() {
     fetchDashboardData()
   }
 
+  const handleDeployRulesInfo = () => {
+    const info = deployFirebaseRulesInfo();
+    toast.info(info.message + '\n\n' + info.commands.join('\n'), {
+      autoClose: 10000,
+      position: "bottom-right"
+    });
+  }
+
   return (
     <Layout>
       <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
@@ -263,6 +273,14 @@ function Dashboard() {
                 <FiEye className="h-4 w-4" />
                 View Products
               </Link>
+              {firebaseError && (
+                <button
+                  onClick={handleDeployRulesInfo}
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-2 text-sm font-medium text-white hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/30 transition-all"
+                >
+                  Deploy Firebase Rules Info
+                </button>
+              )}
             </div>
           </div>
 
@@ -364,81 +382,55 @@ function Dashboard() {
                     </div>
                   ) : (
                     inventory.map((item) => (
-                      <div key={item.category} className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-                        <div className="flex items-center justify-between mb-2">
+                      <div key={item.category} className="flex justify-between items-center">
+                        <div>
                           <p className="font-medium text-gray-900">{item.category}</p>
-                          <span className="text-sm text-gray-600 font-semibold">{item.inStock + item.reserved} items</span>
+                          <p className="text-sm text-gray-500">
+                            {item.inStock} in stock • {item.reserved} reserved
+                          </p>
                         </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <span className="text-green-600 font-semibold mr-4">In stock: {item.inStock}</span>
-                          <span>Reserved: {item.reserved}</span>
+                        <div className="text-right">
+                          <p className="font-semibold text-gray-900">{item.inStock}</p>
+                          <p className="text-sm text-gray-500">
+                            Available: {Math.max(0, item.inStock - item.reserved)}
+                          </p>
                         </div>
                       </div>
                     ))
                   )}
                 </div>
               </div>
-              
+
               {/* COD Orders Summary */}
-              {!loading && !showSampleData && (
-                <CodOrdersSummary />
-              )}
+              <CodOrdersSummary codOrders={codOrders} loading={loading} />
             </div>
           </div>
 
-          {/* Bottom Grid */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="bg-white/80 backdrop-blur-sm border border-blue-100 rounded-2xl shadow-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Revenue Overview</h2>
-                  <p className="text-sm text-gray-600">Past 6 months</p>
-                </div>
-                <span className="text-sm font-medium text-green-600">+12% growth</span>
+          {/* State Distribution Chart */}
+          <div className="bg-white/80 backdrop-blur-sm border border-blue-100 rounded-2xl shadow-lg p-6">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Order Distribution by State</h2>
+              <p className="text-sm text-gray-600">Geographic breakdown of orders</p>
+            </div>
+            {loading ? (
+              <div className="text-center py-8 text-gray-600">
+                Loading state distribution...
               </div>
-              <div className="h-48 flex items-end gap-4">
-                {[50, 80, 60, 95, 70, 110].map((value, idx) => (
-                  <div key={idx} className="flex-1 flex flex-col items-center">
-                    <div className="w-9 rounded-t-xl bg-blue-100 flex items-end">
-                      <div style={{ height: `${value}%` }} className="w-full bg-gradient-to-t from-blue-600 to-indigo-600 rounded-t-xl transition-all" />
-                    </div>
-                    <span className="text-xs text-gray-500 mt-2">M{idx + 1}</span>
+            ) : Object.keys(stateDistribution).length === 0 ? (
+              <div className="text-center py-8 text-gray-600">
+                No state distribution data available
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {Object.entries(stateDistribution).map(([state, count]) => (
+                  <div key={state} className="bg-blue-50 rounded-lg p-4 text-center">
+                    <p className="font-semibold text-gray-900">{state}</p>
+                    <p className="text-2xl font-bold text-blue-600">{count}</p>
+                    <p className="text-xs text-gray-500">orders</p>
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm border border-blue-100 rounded-2xl shadow-lg p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Top Products</h2>
-              <div className="space-y-4">
-                {loading ? (
-                  <div className="text-center py-4 text-gray-600">
-                    Loading products...
-                  </div>
-                ) : products.length === 0 ? (
-                  <div className="text-center py-4 text-gray-600">
-                    No products yet
-                  </div>
-                ) : (
-                  products.slice(0, 3).map((product) => (
-                    <Link
-                      key={product.id}
-                      to={`/update-product/${product.id}`}
-                      className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 hover:shadow-md transition-shadow"
-                    >
-                      <div className="flex items-center gap-3">
-                        <img src={product.imageUrl || product.image} alt={product.title || product.name} className="w-12 h-12 object-cover rounded-lg" />
-                        <div>
-                          <p className="font-medium text-gray-900">{product.title || product.name}</p>
-                          <p className="text-sm text-gray-500">{product.category}</p>
-                        </div>
-                      </div>
-                      <p className="font-semibold text-gray-900">{formatCurrency(product.price)}</p>
-                    </Link>
-                  ))
-                )}
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

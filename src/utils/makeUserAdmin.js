@@ -7,8 +7,9 @@ import { database } from '../firebase/firebaseConfig';
  */
 export const makeUserAdmin = async (userId) => {
   try {
+    const db = database;
     // Add user to admins node
-    await set(ref(database, `admins/${userId}`), true);
+    await set(ref(db, `admins/${userId}`), true);
     console.log('✅ User is now an admin! Please refresh the page.');
     return { success: true, message: 'User is now an admin!' };
   } catch (error) {
@@ -16,5 +17,3 @@ export const makeUserAdmin = async (userId) => {
     return { success: false, error: error.message };
   }
 };
-
-// To use: Call makeUserAdmin('user-uid-here') with the user's Firebase UID

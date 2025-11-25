@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { BrowserRouter as Router } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
@@ -10,30 +10,50 @@ import { trackVisitor, updateVisitorActivity } from './utils/visitorTracker'
 
 function App() {
   useEffect(() => {
-    // Track visitor when app loads
-    const visitorId = trackVisitor();
+    let visitorId = null;
     
-    // Update visitor activity periodically
-    const activityInterval = setInterval(() => {
-      updateVisitorActivity(visitorId);
-    }, 60000); // Update every minute
+    try {
+      // Track visitor when app loads
+      visitorId = trackVisitor();
+    } catch (error) {
+      console.warn('Visitor tracking failed:', error);
+    }
+    
+    // Update visitor activity periodically if tracking is enabled
+    let activityInterval = null;
+    if (visitorId) {
+      activityInterval = setInterval(() => {
+        try {
+          updateVisitorActivity(visitorId);
+        } catch (error) {
+          console.warn('Failed to update visitor activity:', error);
+        }
+      }, 60000); // Update every minute
+    }
     
     return () => {
-      clearInterval(activityInterval);
+      if (activityInterval) {
+        clearInterval(activityInterval);
+      }
     };
   }, []);
 
-  return (
+  // Memoize the context providers to prevent unnecessary re-renders
+  const appContent = useMemo(() => (
     <MyState>
-      <Router>
-        <AuthProvider>
-          <div className="app">
-            <AppRoutes />
-            <ToastContainer position="bottom-right" />
-          </div>
-        </AuthProvider>
-      </Router>
+      <AuthProvider>
+        <div className="app">
+          <AppRoutes />
+          <ToastContainer position="bottom-right" />
+        </div>
+      </AuthProvider>
     </MyState>
+  ), []);
+
+  return (
+    <Router>
+      {appContent}
+    </Router>
   )
 }
 

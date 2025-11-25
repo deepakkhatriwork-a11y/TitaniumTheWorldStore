@@ -1,54 +1,28 @@
-#!/usr/bin/env node
-
 /**
- * Utility script to deploy Firebase rules
- * This script helps automate the deployment of Firebase database rules
+ * Deploy Firebase rules utility
+ * This utility provides information about deploying Firebase rules
+ * Note: Actual deployment must be done via terminal commands
  */
 
-const { exec } = require('child_process');
-const path = require('path');
+/**
+ * Provides information about deploying Firebase rules
+ * This function returns deployment instructions that can be shown to the user
+ */
+export const deployFirebaseRulesInfo = () => {
+  return {
+    message: 'To deploy Firebase rules, run these commands in your terminal:',
+    commands: [
+      'firebase deploy --only firestore:rules',
+      'firebase deploy --only database'
+    ],
+    note: 'This must be run from your project directory where firebase.json exists'
+  };
+};
 
-// Function to deploy Firebase rules
-function deployFirebaseRules() {
-  console.log('Deploying Firebase rules...');
-  
-  // Check if Firebase CLI is installed
-  exec('firebase --version', (error, stdout, stderr) => {
-    if (error) {
-      console.error('Firebase CLI is not installed. Please install it first:');
-      console.log('npm install -g firebase-tools');
-      return;
-    }
-    
-    console.log(`Firebase CLI version: ${stdout.trim()}`);
-    
-    // Login to Firebase (if not already logged in)
-    exec('firebase login', (loginError, loginStdout, loginStderr) => {
-      if (loginError) {
-        console.error('Failed to login to Firebase:', loginError.message);
-        return;
-      }
-      
-      console.log('Successfully logged in to Firebase');
-      
-      // Deploy database rules
-      exec('firebase deploy --only database:rules', (deployError, deployStdout, deployStderr) => {
-        if (deployError) {
-          console.error('Failed to deploy Firebase rules:', deployError.message);
-          console.error('stderr:', deployStderr);
-          return;
-        }
-        
-        console.log('Firebase rules deployed successfully!');
-        console.log(deployStdout);
-      });
-    });
-  });
-}
-
-// Run the deployment function
-if (require.main === module) {
-  deployFirebaseRules();
-}
-
-module.exports = { deployFirebaseRules };
+// Example usage in a component:
+// import { deployFirebaseRulesInfo } from '../utils/deployFirebaseRules';
+// 
+// const handleShowDeployInfo = () => {
+//   const info = deployFirebaseRulesInfo();
+//   // Display info to user
+// };

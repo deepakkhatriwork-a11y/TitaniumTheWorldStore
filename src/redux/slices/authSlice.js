@@ -1,21 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth, database } from '../../firebase/firebaseConfig';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { ref, get } from 'firebase/database';
+import { auth, database } from '../../firebase/firebaseConfig';
 
-const initialState = {
-  user: null,
-  isAuthenticated: false,
-  loading: false,
-  error: null,
-};
-
-// Async thunk for checking authentication with Firebase
+// Async thunk to check authentication status
 const checkAuth = createAsyncThunk(
   'auth/checkAuth',
   async (_, { rejectWithValue }) => {
     try {
-      // Return a promise that resolves with the current auth state
       return new Promise((resolve) => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
           unsubscribe(); // Unsubscribe after first check
@@ -23,13 +15,14 @@ const checkAuth = createAsyncThunk(
           if (firebaseUser) {
             // User is signed in
             try {
+              const db = database;
               // Check if user is admin
-              const adminRef = ref(database, `admins/${firebaseUser.uid}`);
+              const adminRef = ref(db, `admins/${firebaseUser.uid}`);
               const adminSnapshot = await get(adminRef);
               const isAdmin = adminSnapshot.exists();
               
               // Get user data from database
-              const userRef = ref(database, `users/${firebaseUser.uid}`);
+              const userRef = ref(db, `users/${firebaseUser.uid}`);
               const userSnapshot = await get(userRef);
               const userData = userSnapshot.exists() ? userSnapshot.val() : {};
               
@@ -60,7 +53,12 @@ const checkAuth = createAsyncThunk(
 
 const authSlice = createSlice({
   name: 'auth',
-  initialState,
+  initialState: {
+    user: null,
+    isAuthenticated: false,
+    loading: true, // Start with loading true to prevent flash of unauthenticated content
+    error: null,
+  },
   reducers: {
     loginStart(state) {
       state.loading = true;

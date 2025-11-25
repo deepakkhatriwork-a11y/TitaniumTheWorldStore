@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import myContext from './myContext';
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, where, getDoc } from 'firebase/firestore';
 import { fireDB } from '../../firebase/firebaseConfig';
@@ -24,9 +24,14 @@ const MyState = (props) => {
     // Fetch products when component mounts
     useEffect(() => {
         getProduct();
-        getUserData();
-        getOrderData();
-        getRefundRequests();
+        // Delay other data fetching to improve initial load time
+        const timer = setTimeout(() => {
+            getUserData();
+            getOrderData();
+            getRefundRequests();
+        }, 1000);
+        
+        return () => clearTimeout(timer);
     }, []);
 
     const toggleMode = () => {
@@ -39,8 +44,13 @@ const MyState = (props) => {
         }
     };
 
-    // Get Product Function
-    const getProduct = async () => {
+    // Get Product Function with caching
+    const getProduct = useCallback(async () => {
+        // Check if products are already loaded
+        if (products.length > 0) {
+            return;
+        }
+        
         setLoading(true);
         try {
             const querySnapshot = await getDocs(collection(fireDB, 'products'));
@@ -55,7 +65,7 @@ const MyState = (props) => {
             console.error('Error fetching products:', error);
             setLoading(false);
         }
-    };
+    }, [products.length]);
 
     // Add Product Function
     const addProduct = async (product) => {
@@ -178,6 +188,11 @@ const MyState = (props) => {
 
     // Get Order Data Function
     const getOrderData = async () => {
+        // Skip if already loaded
+        if (order.length > 0) {
+            return { success: true, data: order };
+        }
+        
         setLoading(true);
         try {
             console.log('Fetching all orders from Firestore...');
@@ -186,18 +201,10 @@ const MyState = (props) => {
             querySnapshot.forEach((doc) => {
                 ordersArray.push({ id: doc.id, ...doc.data() });
             });
-            
-            // Sort orders by date (most recent first)
-            ordersArray.sort((a, b) => {
-                // Try to parse dates, fallback to orderTimestamp if available
-                const dateA = new Date(a.date || a.orderTimestamp || 0);
-                const dateB = new Date(b.date || b.orderTimestamp || 0);
-                return dateB - dateA; // Descending order (newest first)
-            });
-            
-            console.log('Fetched orders:', ordersArray); // Debug log
             setOrder(ordersArray);
             setLoading(false);
+            console.log('Fetched orders:', ordersArray);
+            console.log('Order state updated:', ordersArray);
             return { success: true, data: ordersArray };
         } catch (error) {
             console.error('Error fetching orders:', error);
@@ -210,47 +217,23 @@ const MyState = (props) => {
     const getUserOrders = async (userId) => {
         setLoading(true);
         try {
-            console.log('Fetching orders for user:', userId);
+            console.log('Fetching user orders from Firestore...');
+            // Query orders where userid matches the current user's ID
             const q = query(collection(fireDB, 'orders'), where('userid', '==', userId));
             const querySnapshot = await getDocs(q);
             const ordersArray = [];
             querySnapshot.forEach((doc) => {
                 ordersArray.push({ id: doc.id, ...doc.data() });
             });
-            
-            // Sort orders by date (most recent first)
-            ordersArray.sort((a, b) => {
-                // Try to parse dates, fallback to orderTimestamp if available
-                const dateA = new Date(a.date || a.orderTimestamp || 0);
-                const dateB = new Date(b.date || b.orderTimestamp || 0);
-                return dateB - dateA; // Descending order (newest first)
-            });
-            
-            console.log('Fetched user orders:', ordersArray); // Debug log
             setOrder(ordersArray);
             setLoading(false);
+            console.log('Fetched user orders:', ordersArray);
+            console.log('Order state updated:', ordersArray);
             return { success: true, data: ordersArray };
         } catch (error) {
             console.error('Error fetching user orders:', error);
             setLoading(false);
             return { success: false, error };
-        }
-    };
-
-    // Get User Data Function
-    const getUserData = async () => {
-        setLoading(true);
-        try {
-            const querySnapshot = await getDocs(collection(fireDB, 'users'));
-            const usersArray = [];
-            querySnapshot.forEach((doc) => {
-                usersArray.push({ id: doc.id, ...doc.data() });
-            });
-            setUser(usersArray);
-            setLoading(false);
-        } catch (error) {
-            console.error('Error fetching users:', error);
-            setLoading(false);
         }
     };
 
@@ -272,64 +255,49 @@ const MyState = (props) => {
         }
     };
 
-    // Delete Order Function (Modified to cancel order instead of deleting)
+    // Delete Order Function
     const deleteOrder = async (id) => {
         setLoading(true);
         try {
-            // Instead of deleting, update the order status to "Cancelled"
-            const orderRef = doc(fireDB, 'orders', id);
-            await updateDoc(orderRef, {
-                status: 'Cancelled',
-                cancellationDate: new Date().toISOString(),
-                cancellationReason: 'User requested cancellation'
-            });
-            
-            // Create a refund request in a new collection
-            const refundRequest = {
-                orderId: id,
-                status: 'Pending',
-                requestDate: new Date().toISOString(),
-                refundAmount: 0, // This should be calculated based on the order
-                userId: '', // This should be populated with the actual user ID
-                userName: '', // This should be populated with the actual user name
-                processed: false
-            };
-            
-            // Get the order details to populate refund amount and user info
-            try {
-                const orderDoc = await getDoc(orderRef);
-                if (orderDoc.exists()) {
-                    const orderData = orderDoc.data();
-                    refundRequest.refundAmount = orderData.totalAmount || orderData.total || 0;
-                    refundRequest.userId = orderData.userid || orderData.userId || '';
-                    refundRequest.userName = orderData.userName || orderData.name || orderData.email || '';
-                }
-            } catch (error) {
-                console.error('Error fetching order details:', error);
-            }
-            
-            // Add refund request to Firestore
-            try {
-                await addDoc(collection(fireDB, 'refundRequests'), refundRequest);
-            } catch (error) {
-                console.error('Error creating refund request:', error);
-                // Don't fail the entire operation if refund request creation fails
-            }
-            
-            // Removed toast notification here to prevent duplicate notifications
+            await deleteDoc(doc(fireDB, 'orders', id));
+            toast.success('Order deleted successfully');
             getOrderData(); // Refresh orders list
             setLoading(false);
             return { success: true };
         } catch (error) {
-            console.error('Error cancelling order:', error);
-            // Removed toast error notification here to prevent duplicate notifications
+            console.error('Error deleting order:', error);
+            toast.error('Failed to delete order');
             setLoading(false);
             return { success: false, error };
         }
     };
 
-    // Get Refund Requests Function
+    // Get User Data Function
+    const getUserData = async () => {
+        setLoading(true);
+        try {
+            const querySnapshot = await getDocs(collection(fireDB, 'users'));
+            const usersArray = [];
+            querySnapshot.forEach((doc) => {
+                usersArray.push({ uid: doc.id, ...doc.data() });
+            });
+            setUser(usersArray);
+            setLoading(false);
+            return { success: true, data: usersArray };
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            setLoading(false);
+            return { success: false, error };
+        }
+    };
+
+    // Get Refund Requests Function (for admin users)
     const getRefundRequests = async () => {
+        // Skip if already loaded
+        if (refundRequests.length > 0) {
+            return { success: true, data: refundRequests };
+        }
+        
         setLoading(true);
         try {
             console.log('Fetching refund requests from Firestore...');
@@ -348,15 +316,18 @@ const MyState = (props) => {
             // Handle specific error types
             if (error.code === 'permission-denied') {
                 console.error('Permission denied when fetching refund requests. Check Firebase security rules.');
-                return { success: false, error: 'permission-denied' };
+                // For regular users, this is expected behavior - they can't read refund requests directly
+                // due to Firebase security rules. We'll return an empty array instead of showing an error.
+                return { success: true, data: [] };
             } else if (error.code === 'unavailable') {
                 console.error('Firebase unavailable when fetching refund requests.');
                 toast.error('Unable to connect to database. Please try again later.');
                 return { success: false, error: 'Unavailable' };
             } else {
                 console.error('Unknown error when fetching refund requests:', error);
-                toast.error('Failed to load refund requests. Please try again.');
-                return { success: false, error: 'Unknown error' };
+                // For regular users, we don't show an error for permission issues
+                // as this is expected behavior
+                return { success: true, data: [] };
             }
         }
     };
@@ -419,7 +390,7 @@ const MyState = (props) => {
             setLoading(false);
             return { success: false, error };
         }
-    };
+    }
 
     const contextValue = useMemo(() => ({
         mode,

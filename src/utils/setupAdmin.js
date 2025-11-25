@@ -14,12 +14,13 @@ export const setupAdminUser = async (email, password, name) => {
     
     console.log('User created with UID:', user.uid);
     
+    const db = database;
     // Add user to admins node
-    await set(ref(database, `admins/${user.uid}`), true);
+    await set(ref(db, `admins/${user.uid}`), true);
     console.log('Admin role assigned');
     
     // Add user data to users node
-    await set(ref(database, `users/${user.uid}`), {
+    await set(ref(db, `users/${user.uid}`), {
       name: name,
       email: email,
       role: 'admin',
@@ -40,6 +41,3 @@ export const setupAdminUser = async (email, password, name) => {
     };
   }
 };
-
-// Example usage:
-// setupAdminUser('admin@titanium.com', 'Admin@123', 'Admin User');

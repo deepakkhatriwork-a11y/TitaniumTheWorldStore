@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext, useEffect, useMemo } from 'react'
 import myContext from '../../context/data/myContext'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
@@ -37,56 +37,42 @@ function ProductCard() {
         localStorage.setItem('cart', JSON.stringify(cartItems));
     }, [cartItems])
 
-    // Debug logging
-    console.log('ProductCard - products:', products);
-    console.log('ProductCard - searchkey:', searchkey);
-    console.log('ProductCard - filterType:', filterType);
-    console.log('ProductCard - filterPrice:', filterPrice);
-    
-    // Filter products based on search, category, and price
-    const filteredProducts = products.filter((obj) => {
-        // Search filter - check if searchkey matches title, description, or category
-        const matchesSearch = searchkey === '' || 
-            (obj.title && obj.title.toLowerCase().includes(searchkey.toLowerCase())) ||
-            (obj.description && obj.description.toLowerCase().includes(searchkey.toLowerCase())) ||
-            (obj.category && obj.category.toLowerCase().includes(searchkey.toLowerCase()));
-        
-        // Category filter
-        const matchesCategory = filterType === '' || 
-            (obj.category && obj.category.toLowerCase().includes(filterType.toLowerCase()));
-        
-        // Price filter - handle different filter options
-        let matchesPrice = true;
-        if (filterPrice !== '') {
-            const price = parseFloat(obj.price);
-            if (filterPrice === '0-1000') {
-                matchesPrice = price <= 1000;
-            } else if (filterPrice === '1001-5000') {
-                matchesPrice = price > 1000 && price <= 5000;
-            } else if (filterPrice === '5001-10000') {
-                matchesPrice = price > 5000 && price <= 10000;
-            } else if (filterPrice === '10001+') {
-                matchesPrice = price > 10000;
+    // Memoize filtered products to prevent unnecessary re-renders
+    const filteredProducts = useMemo(() => {
+        return products.filter((obj) => {
+            // Search filter - check if searchkey matches title, description, or category
+            const matchesSearch = searchkey === '' || 
+                (obj.title && obj.title.toLowerCase().includes(searchkey.toLowerCase())) ||
+                (obj.description && obj.description.toLowerCase().includes(searchkey.toLowerCase())) ||
+                (obj.category && obj.category.toLowerCase().includes(searchkey.toLowerCase()));
+            
+            // Category filter
+            const matchesCategory = filterType === '' || 
+                (obj.category && obj.category.toLowerCase().includes(filterType.toLowerCase()));
+            
+            // Price filter - handle different filter options
+            let matchesPrice = true;
+            if (filterPrice !== '') {
+                const price = parseFloat(obj.price);
+                if (filterPrice === '0-1000') {
+                    matchesPrice = price <= 1000;
+                } else if (filterPrice === '1001-5000') {
+                    matchesPrice = price > 1000 && price <= 5000;
+                } else if (filterPrice === '5001-10000') {
+                    matchesPrice = price > 5000 && price <= 10000;
+                } else if (filterPrice === '10001+') {
+                    matchesPrice = price > 10000;
+                }
             }
-        }
-        
-        // Debug logging
-        if (!matchesSearch || !matchesCategory || !matchesPrice) {
-            console.log('ProductCard - Filtering out item:', obj.title, {
-                matchesSearch,
-                matchesCategory,
-                matchesPrice,
-                searchkey,
-                filterType,
-                filterPrice,
-                price: parseFloat(obj.price)
-            });
-        }
-        
-        return matchesSearch && matchesCategory && matchesPrice;
-    });
-    
-    console.log('ProductCard - filteredProducts:', filteredProducts);
+            
+            return matchesSearch && matchesCategory && matchesPrice;
+        });
+    }, [products, searchkey, filterType, filterPrice]);
+
+    // Limit products displayed to improve performance
+    const displayProducts = useMemo(() => {
+        return filteredProducts.slice(0, 20); // Show only first 20 products
+    }, [filteredProducts]);
 
     return (
         <section className="text-gray-600 body-font">
@@ -116,7 +102,7 @@ function ProductCard() {
                             </Link>
                         </div>
                     </div>
-                ) : filteredProducts.length === 0 ? (
+                ) : displayProducts.length === 0 ? (
                     <div className="text-center py-12">
                         <div className="mx-auto w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-4">
                             <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -162,7 +148,7 @@ function ProductCard() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredProducts.map((item, index) => {
+                        {displayProducts.map((item, index) => {
                             const { id, title, price, description, imageUrl, image } = item;
                             // Fallback to 'image' property if 'imageUrl' is not available
                             const productImageUrl = imageUrl || image || 'https://placehold.co/400x400/cccccc/ffffff?text=No+Image';
@@ -189,6 +175,7 @@ function ProductCard() {
                                                 src={productImageUrl} 
                                                 alt={title || 'Product'} 
                                                 onError={handleImageError}
+                                                loading="lazy" // Lazy load product images
                                             />
                                         </div>
                                         <div className="p-4 border-t-2">

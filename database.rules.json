@@ -3,6 +3,7 @@
     "visitors": {
       ".read": true,
       ".write": true,
+      ".indexOn": ["lastActive"],
       "$visitor_id": {
         ".validate": "newData.hasChildren(['timestamp', 'lastActive'])"
       }

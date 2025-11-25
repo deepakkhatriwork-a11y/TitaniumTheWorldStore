@@ -1,4 +1,3 @@
-// src/components/header/Header.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -15,7 +14,8 @@ import {
   FiLogIn,
   FiLogOut,
   FiSettings,
-  FiHeart
+  FiHeart,
+  FiArrowUp
 } from 'react-icons/fi';
 
 function Header() {
@@ -23,6 +23,8 @@ function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isScrollingTop, setIsScrollingTop] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const headerRef = useRef(null);
@@ -59,6 +61,20 @@ function Header() {
   // Toggle mobile menu
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
+  // Scroll to top function with loading state
+  const scrollToTop = () => {
+    setIsScrollingTop(true);
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+    
+    // Simulate loading state for 1 second
+    setTimeout(() => {
+      setIsScrollingTop(false);
+    }, 1000);
+  };
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -73,7 +89,10 @@ function Header() {
 
   // Add scroll effect
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 10);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+      setShowScrollTop(window.scrollY > 300);
+    };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -81,21 +100,21 @@ function Header() {
   return (
     <header 
       ref={headerRef}
-      className={`fixed top-0 left-0 right-0 w-full z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 w-full z-50 bg-white dark:bg-gray-800 transition-all duration-300 ${
         scrolled ? 'shadow-md' : 'shadow-sm'
       } py-3 md:py-4`}
     >
       <div className="max-w-5xl mx-auto px-4">
-        <div className="flex items-center justify-between md:gap-4">
+        <div className="flex items-center justify-center md:gap-4">
           {/* Logo */}
-          <Link to="/" className="text-xl font-bold text-gray-900 dark:text-white whitespace-nowrap">
+          <Link to="/" className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white whitespace-nowrap min-w-[250px] md:min-w-[300px]">
             Titanium Store
           </Link>
 
           {/* Search input - desktop */}
           <form 
             onSubmit={handleSearchSubmit}
-            className="hidden md:flex flex-1 max-w-xl items-center bg-gray-50 dark:bg-gray-700 rounded-lg px-4 py-2.5 focus-within:ring-2 focus-within:ring-blue-500 transition"
+            className="hidden md:flex flex-1 max-w-xl items-center bg-gray-50 dark:bg-gray-700 rounded-lg px-4 py-2.5 transition"
           >
             <FiSearch className="text-gray-400 dark:text-gray-300 mr-2" size={20} />
             <input
@@ -108,31 +127,31 @@ function Header() {
           </form>
 
           {/* Desktop Navigation Icons */}
-          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
+          <nav className="hidden md:flex items-center space-x-2 lg:space-x-3">
             {/* Home */}
-            <Link to="/" className="btn-icon text-gray-700 dark:text-gray-200 p-2">
-              <FiHome className="w-5 h-5" />
+            <Link to="/" className="btn-icon text-gray-700 dark:text-gray-200 p-2.5">
+              <FiHome className="w-6 h-6" />
             </Link>
 
             {/* Products */}
-            <Link to="/products" className="btn-icon text-gray-700 dark:text-gray-200 p-2">
-              <FiShoppingBag className="w-5 h-5" />
+            <Link to="/products" className="btn-icon text-gray-700 dark:text-gray-200 p-2.5">
+              <FiShoppingBag className="w-6 h-6" />
             </Link>
 
             {/* Search Icon - Hidden on desktop since we have search input */}
-            <button className="btn-icon text-gray-700 dark:text-gray-200 p-2 md:hidden">
-              <FiSearch className="w-5 h-5" />
+            <button className="btn-icon text-gray-700 dark:text-gray-200 p-2.5 md:hidden">
+              <FiSearch className="w-6 h-6" />
             </button>
 
             {/* Wishlist */}
-            <Link to="/wishlist" className="btn-icon text-gray-700 dark:text-gray-200 relative p-2">
-              <FiHeart className="w-5 h-5" />
+            <Link to="/wishlist" className="btn-icon text-gray-700 dark:text-gray-200 relative p-2.5">
+              <FiHeart className="w-6 h-6" />
               {/* Badge for wishlist items could be added here */}
             </Link>
 
             {/* Cart */}
-            <Link to="/cart" className="btn-icon text-gray-700 dark:text-gray-200 relative p-2">
-              <FiShoppingCart className="w-5 h-5" />
+            <Link to="/cart" className="btn-icon text-gray-700 dark:text-gray-200 relative p-2.5">
+              <FiShoppingCart className="w-6 h-6" />
               {items?.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
                   {items.length}
@@ -142,8 +161,8 @@ function Header() {
 
             {/* Orders */}
             {isAuthenticated && (
-              <Link to="/order" className="btn-icon text-gray-700 dark:text-gray-200 relative p-2">
-                <FiPackage className="w-5 h-5" />
+              <Link to="/order" className="btn-icon text-gray-700 dark:text-gray-200 relative p-2.5">
+                <FiPackage className="w-6 h-6" />
               </Link>
             )}
 
@@ -157,27 +176,27 @@ function Header() {
                   </div>
                   <Link
                     to="/order"
-                    className="btn-icon text-gray-700 dark:text-gray-200 relative p-2"
+                    className="btn-icon text-gray-700 dark:text-gray-200 relative p-2.5"
                   >
-                    <FiUser className="w-5 h-5" />
+                    <FiUser className="w-6 h-6" />
                   </Link>
                 </div>
                 
                 {/* Logout Icon */}
                 <button
                   onClick={handleLogout}
-                  className="btn-icon text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 p-2"
+                  className="btn-icon text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 p-2.5"
                   title="Logout"
                 >
-                  <FiLogOut className="w-5 h-5" />
+                  <FiLogOut className="w-6 h-6" />
                 </button>
               </>
             ) : (
               <Link
                 to="/login"
-                className="btn-icon text-gray-700 dark:text-gray-200 p-2"
+                className="btn-icon text-gray-700 dark:text-gray-200 p-2.5"
               >
-                <FiUser className="w-5 h-5" />
+                <FiUser className="w-6 h-6" />
               </Link>
             )}
           </nav>
@@ -185,24 +204,24 @@ function Header() {
           <div className="flex items-center md:hidden ml-auto space-x-2">
             {/* Search Icon for mobile */}
             <button 
-              className="text-gray-700 hover:text-primary focus:outline-none p-2"
+              className="text-gray-700 hover:text-primary focus:outline-none p-2.5"
               onClick={() => navigate('/products')}
             >
-              <FiSearch size={20} />
+              <FiSearch size={24} />
             </button>
             
             {/* Wishlist Icon for mobile */}
-            <Link to="/wishlist" className="text-gray-700 hover:text-primary focus:outline-none relative p-2">
-              <FiHeart size={20} />
+            <Link to="/wishlist" className="text-gray-700 hover:text-primary focus:outline-none relative p-2.5">
+              <FiHeart size={24} />
             </Link>
             
             {/* Menu Toggle */}
             <button
               onClick={toggleMenu}
-              className="text-gray-700 hover:text-primary focus:outline-none p-2 bg-transparent"
+              className="text-gray-700 hover:text-primary focus:outline-none p-2.5 bg-transparent"
               aria-label="Toggle navigation menu"
             >
-              {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+              {isMenuOpen ? <FiX size={28} /> : <FiMenu size={28} />}
             </button>
           </div>
         </div>
@@ -298,6 +317,24 @@ function Header() {
           </div>
         )}
       </div>
+      
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          disabled={isScrollingTop}
+          className={`fixed bottom-6 right-6 bg-white text-blue-600 p-4 rounded-full shadow-lg hover:bg-gray-100 transition-all duration-300 z-50 border border-gray-200 ${
+            isScrollingTop ? 'opacity-75 cursor-not-allowed' : ''
+          }`}
+          aria-label="Scroll to top"
+        >
+          {isScrollingTop ? (
+            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <FiArrowUp size={24} />
+          )}
+        </button>
+      )}
     </header>
   );
 }

@@ -1,28 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth, database } from '../../firebase/firebaseConfig';
-import { ref, get } from 'firebase/database';
+import { get, ref } from 'firebase/database';
+import { useDispatch } from 'react-redux';
 import { loginSuccess, logout } from '../../redux/slices/authSlice';
+import { auth, database } from '../../firebase/firebaseConfig';
 import { Spinner } from '../ui/Spinner';
 
-export const AuthProvider = ({ children }) => {
+const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
 
   useEffect(() => {
     // Listen for auth state changes
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => { // Use direct reference instead of calling as function
       if (firebaseUser) {
         try {
-          // Check if user is admin
-          const adminRef = ref(database, `admins/${firebaseUser.uid}`);
-          const adminSnapshot = await get(adminRef);
-          const isAdmin = adminSnapshot.exists();
+          const db = database; // Use direct reference instead of calling as function
+          // Use Promise.all to fetch user data in parallel for better performance
+          const [adminSnapshot, userSnapshot] = await Promise.all([
+            get(ref(db, `admins/${firebaseUser.uid}`)),
+            get(ref(db, `users/${firebaseUser.uid}`))
+          ]);
           
-          // Get user data from database
-          const userRef = ref(database, `users/${firebaseUser.uid}`);
-          const userSnapshot = await get(userRef);
+          const isAdmin = adminSnapshot.exists();
           const userData = userSnapshot.exists() ? userSnapshot.val() : {};
           
           const user = {
@@ -49,15 +49,18 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, [dispatch]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
+  // Memoize the loading state to prevent unnecessary re-renders
+  const loadingComponent = useMemo(() => (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <Spinner size="lg" />
+        <p className="mt-4 text-gray-600">Loading...</p>
       </div>
-    );
+    </div>
+  ), []);
+
+  if (loading) {
+    return loadingComponent;
   }
 
   return <>{children}</>;

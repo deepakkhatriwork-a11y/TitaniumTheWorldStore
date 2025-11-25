@@ -1,33 +1,34 @@
-import { useDispatch, useSelector } from 'react-redux';
-import { useCallback } from 'react';
-import {
-  loginStart,
-  loginSuccess,
-  loginFailure,
+import { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut 
+} from 'firebase/auth';
+import { ref, set, get } from 'firebase/database';
+import { 
+  loginStart, 
+  loginSuccess, 
+  loginFailure, 
   logout as logoutAction,
-  setLoading as setAuthLoading,
-  checkAuth as checkAuthAction,
+  setLoading
 } from '../redux/slices/authSlice';
-import { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, database } from '../firebase/firebaseConfig';
-import { ref, get, set } from 'firebase/database';
 
 export const useAuth = () => {
+  const { user, isAuthenticated, loading, error } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
-  const { user, isAuthenticated, loading, error } = useSelector(
-    (state) => state.auth
-  );
 
-  // Check if user is already authenticated
-  const checkAuth = useCallback(() => {
-    return dispatch(checkAuthAction());
-  }, [dispatch]);
+  const checkAuth = () => {
+    // This is handled by the AuthProvider component
+    return { isAuthenticated, user };
+  };
 
   const register = async (userData) => {
     try {
       dispatch(loginStart());
       
-      // Create user in Firebase Authentication
+      // Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         userData.email,
@@ -38,7 +39,8 @@ export const useAuth = () => {
       
       try {
         // Save user data to Firebase Realtime Database
-        await set(ref(database, `users/${firebaseUser.uid}`), {
+        const db = database;
+        await set(ref(db, `users/${firebaseUser.uid}`), {
           name: userData.name,
           email: userData.email,
           role: 'user',
@@ -91,15 +93,16 @@ export const useAuth = () => {
       console.log('Firebase user authenticated:', firebaseUser.uid);
       
       try {
+        const db = database;
         // Check if user is admin by checking Firebase Realtime Database
-        const adminRef = ref(database, `admins/${firebaseUser.uid}`);
+        const adminRef = ref(db, `admins/${firebaseUser.uid}`);
         const adminSnapshot = await get(adminRef);
         
         const isAdmin = adminSnapshot.exists();
         console.log('Is admin:', isAdmin);
         
         // Get user data from Firebase Realtime Database
-        const userRef = ref(database, `users/${firebaseUser.uid}`);
+        const userRef = ref(db, `users/${firebaseUser.uid}`);
         const userSnapshot = await get(userRef);
         
         const userData = userSnapshot.exists() ? userSnapshot.val() : {};
@@ -167,8 +170,8 @@ export const useAuth = () => {
     }
   };
 
-  const setLoading = (isLoading) => {
-    dispatch(setAuthLoading(isLoading));
+  const setLoadingState = (isLoading) => {
+    dispatch(setLoading(isLoading));
   };
 
   return {
@@ -179,7 +182,7 @@ export const useAuth = () => {
     login,
     register,
     logout,
-    setLoading,
+    setLoading: setLoadingState,
     checkAuth,
   };
 };

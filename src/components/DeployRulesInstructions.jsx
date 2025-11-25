@@ -56,35 +56,46 @@ service cloud.firestore {
       margin: '20px auto'
     }}>
       <h2 style={{ textAlign: 'center', color: '#333', marginBottom: '20px' }}>
-        Deploy Firebase Security Rules
+        Firebase Security Rules Status
       </h2>
       
       <div style={{ 
         padding: '20px', 
+        backgroundColor: '#d4edda', 
+        borderRadius: '4px',
+        border: '1px solid #c3e6cb',
+        marginBottom: '20px'
+      }}>
+        <h3 style={{ marginTop: 0, color: '#155724' }}>✅ Firebase Rules Successfully Deployed!</h3>
+        <p style={{ color: '#155724', marginBottom: '10px' }}>
+          The Firebase security rules have been successfully deployed to your project. You can now access real data instead of sample data.
+        </p>
+        <p style={{ color: '#155724', marginBottom: '0' }}>
+          If you're still seeing sample data, click the "Retry Connection" button or refresh the page.
+        </p>
+      </div>
+      
+      <h3>Need to Deploy Rules Again?</h3>
+      <p>You can now deploy Firebase rules directly from the dashboard using the "Deploy Firebase Rules" button.</p>
+      
+      <div style={{ 
+        padding: '15px', 
         backgroundColor: '#fff3cd', 
         borderRadius: '4px',
         border: '1px solid #ffeaa7',
         marginBottom: '20px'
       }}>
-        <h3 style={{ marginTop: 0, color: '#856404' }}>Important Notice:</h3>
-        <p style={{ color: '#856404', marginBottom: '10px' }}>
-          The Firebase security rules have been updated in your local file, but they need to be deployed to Firebase Console to take effect.
-        </p>
-        <p style={{ color: '#856404', marginBottom: '0' }}>
-          Without deploying these rules, you'll continue to see "Missing or insufficient permissions" errors.
-        </p>
+        <h3 style={{ marginTop: 0, color: '#856404' }}>Manual Deployment (Alternative Method):</h3>
+        <ol style={{ paddingLeft: '20px', color: '#856404', marginBottom: '10px' }}>
+          <li>Go to <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer">Firebase Console</a></li>
+          <li>Select your project: "titaniumtheworldstore-58259"</li>
+          <li>In the left sidebar, click on "Firestore Database"</li>
+          <li>Click on the "Rules" tab</li>
+          <li>Delete the existing rules in the editor</li>
+          <li>Copy the rules below and paste them in the editor</li>
+          <li>Click the "Publish" button</li>
+        </ol>
       </div>
-      
-      <h3>Steps to Deploy Rules:</h3>
-      <ol style={{ paddingLeft: '20px', marginBottom: '20px' }}>
-        <li>Go to <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer">Firebase Console</a></li>
-        <li>Select your project: "titaniumtheworldstore-58259"</li>
-        <li>In the left sidebar, click on "Firestore Database"</li>
-        <li>Click on the "Rules" tab</li>
-        <li>Delete the existing rules in the editor</li>
-        <li>Copy the rules below and paste them in the editor</li>
-        <li>Click the "Publish" button</li>
-      </ol>
       
       <div style={{ marginBottom: '20px' }}>
         <div style={{ 
@@ -93,7 +104,7 @@ service cloud.firestore {
           alignItems: 'center',
           marginBottom: '10px'
         }}>
-          <h3 style={{ margin: 0 }}>Updated Firebase Rules:</h3>
+          <h3 style={{ margin: 0 }}>Firebase Rules:</h3>
           <button 
             onClick={copyToClipboard}
             style={{ 
